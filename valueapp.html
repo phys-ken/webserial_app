@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>シリアル通信で物理実験をしよう</title>
+
+</head>
+
+<body>
+  <h1>シリアル通信で物理実験をしよう</h1>
+  シリアル通信に対応したデバイスが送った値を表示します。<p>
+    startを押すと、下のボックスに値が連続で表示されます。
+  <p>
+    値をスプレッドシートなどにコピー＆ペーストで貼り付け、分析してみましょう。
+  <p>
+  <p>
+
+    <button onclick="onConnectButtonClick()">Connect</button> 115200 Only
+    <br>
+
+
+  <div class="sample3Area" id="swButton">
+    <input type="checkbox" id="sample3check" checked="">
+    <label for="sample3check">
+      <span></span>
+    </label>
+  </div>
+
+  <p>
+    <textarea cols="80" rows="20" id="outputArea" readonly></textarea>
+    <input type="button" value="クリア" onclick="clearTextarea()" />
+
+</body>
+
+
+
+<style type="text/css">
+  /* === ボタンを表示するエリア ============================== */
+  .sample3Area {
+
+    width: 60px;
+    /* ボタンの横幅       */
+  }
+
+  /* === チェックボックス ==================================== */
+  .sample3Area input[type="checkbox"] {
+    display: none;
+    /* チェックボックス非表示 */
+  }
+
+  /* === チェックボックスのラベル（標準） ==================== */
+  .sample3Area label {
+    display: block;
+    /* ボックス要素に変更 */
+    box-sizing: border-box;
+    /* 枠線を含んだサイズ */
+    text-align: center;
+    /* 文字位置は中央     */
+    border: 2px solid #ccc;
+    /* 枠線(一旦四方向)   */
+    border-radius: 3px;
+    /* 角丸               */
+    height: 60px;
+    /* ボタンの高さ       */
+    font-size: 18px;
+    /* 文字サイズ         */
+    line-height: 60px;
+    /* 太字               */
+    font-weight: bold;
+    /* 太字               */
+    background: #eee;
+    /* 背景色             */
+    box-shadow: 3px 3px 6px #888;
+    /* 影付け             */
+    transition: .3s;
+    /* ゆっくり変化       */
+  }
+
+  /* === ON側のチェックボックスのラベル（ONのとき） ========== */
+  .sample3Area label span:after {
+    content: "Stop";
+    /* 表示する文字       */
+    color: rgb(47, 140, 240);
+  }
+
+  .sample3Area #sample3check:checked+label {
+    background: #fa6161;
+    /* 背景色             */
+    /*box-shadow     : none;                /* 影を消す           */
+  }
+
+  .sample3Area #sample3check:checked+label span:after {
+    content: "Start";
+    /* 表示する文字       */
+    color: #fff;
+    /* 文字色             */
+  }
+</style>
+
+<script>
+  let port;
+  const swButton = document.getElementById("sample3check");
+  let swFlag = true;
+
+  async function onConnectButtonClick() {
+    try {
+      port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+
+      while (port.readable) {
+        const reader = port.readable.getReader();
+
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) {
+              addSerial("Canceled\n");
+              break;
+            }
+            const inputValue = new TextDecoder().decode(value);
+            addSerial(inputValue);
+          }
+        } catch (error) {
+          addSerial("Error: Read" + error + "\n");
+        } finally {
+          reader.releaseLock();
+        }
+      }
+    } catch (error) {
+      addSerial("Error: Open" + error + "\n");
+    }
+  }
+
+
+  swButton.addEventListener("click", function (e) {
+    if (swButton.checked) {
+      swFlag = true;
+    } else {
+      swFlag = false;
+    }
+  });
+
+  function addSerial(msg) {
+    var textarea = document.getElementById('outputArea');
+    if (swFlag == false) {
+      textarea.value += msg;
+      textarea.scrollTop = textarea.scrollHeight;
+    }
+  }
+
+  async function sendSerial() {
+    var text = document.getElementById('sendInput').value;
+    document.getElementById('sendInput').value = "";
+
+    const encoder = new TextEncoder();
+    const writer = port.writable.getWriter();
+    await writer.write(encoder.encode(text + "\n"));
+    writer.releaseLock();
+  }
+
+  function clearTextarea() {
+    var textareaForm = document.getElementById("outputArea");
+    textareaForm.value = '';
+  }
+</script>
+
+
+
+
+</html>
