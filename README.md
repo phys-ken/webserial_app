@@ -1,10 +1,12 @@
 # シリアル通信で物理実験をしよう
 
-* web serial apiを使って、マイコン等とシリアル通信をします。
+* Web Serial APIを使って、マイコン等とシリアル通信をします。
+* 測定値を画面に表示してコピペしたり、グラフとして表示したりすることができます。
 
-## [測定値を取得して、定量的に分析する](https://phys-ken.github.io/webserial_app/valueapp.html)
 
-## [測定値のグラフをダイレクトに表示する](https://phys-ken.github.io/webserial_app/graphapp.html)
+### [測定値を取得して、定量的に分析する](https://phys-ken.github.io/webserial_app/valueapp.html)
+
+### [測定値のグラフをダイレクトに表示する](https://phys-ken.github.io/webserial_app/graphapp.html)
 
 ## 参考にしたサイト
 * [Web Serial API＋ESP32(Arduino)研究 その1 シリアルコンソール](https://lang-ship.com/blog/work/web-serial-api-esp32-01-console/)
