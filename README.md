@@ -27,6 +27,9 @@
 * [Web Serial API＋ESP32(Arduino)研究 その1 シリアルコンソール](https://lang-ship.com/blog/work/web-serial-api-esp32-01-console/)
 * [Web Serial API を使って micro:bit からセンサーの値（XYZ）を読み取る＆リアルタイムなグラフ化](https://qiita.com/youtoy/items/6394a5570ddd54a2ce87)
 
-[シリアル通信で物理実験をしよう Topにもどる](https://phys-ken.github.io/webserial_app
+
+## リンク
+* [シリアル通信で物理実験をしよう Topにもどる](https://phys-ken.github.io/webserial_app
 )
-[Phys-kenのTopにもどる](https://phys-ken.github.io/phys-ken/)
+* [Phys-kenのTopにもどる](https://phys-ken.github.io/phys-ken/)
+* [@Phys-ken(Twitter)](https://twitter.com/phys_ken)
