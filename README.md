@@ -29,3 +29,4 @@
 
 [シリアル通信で物理実験をしよう Topにもどる](https://phys-ken.github.io/webserial_app
 )
+[Phys-kenのTopにもどる](https://phys-ken.github.io/phys-ken/)
