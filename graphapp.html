@@ -1,154 +1,116 @@
 <!DOCTYPE html>
-<html lang=ja">
+<html>
+
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>シリアル通信で物理実験をしよう</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@1.8.0/dist/chartjs-plugin-streaming.min.js"></script>
 </head>
+
 <body>
-  <style>
-    /* 線の色の変更 */
-    .epoch .category1 .line {
-      stroke: #dc3545;
+  <h1>シリアル通信で物理実験をしよう</h1>
+  シリアル通信に対応したデバイスが送った値を表示します。<p>
+    接続ボタンから機器を選択して、測定をはじめてください。<p>
+
+  <button onclick="onStartButtonClick()">接続</button>
+  <br>
+  <canvas id="myChart"></canvas>
+
+  <script>
+    class LineBreakTransformer {
+      constructor() {
+        this.chunks = "";
+      }
+
+      transform(chunk, controller) {
+        this.chunks += chunk;
+        const lines = this.chunks.split("\r\n");
+        this.chunks = lines.pop();
+        lines.forEach((line) => controller.enqueue(line));
+      }
+
+      flush(controller) {
+        controller.enqueue(this.chunks);
+      }
     }
- 
-    .epoch .category2 .line {
-      stroke: #17a2b8;
-    }
- </style>
- <div class="container">
-     <h1 class="text-center">現在の気温・湿度</h1>
-     <div class="row">
-         <div class="mx-auto">
-             <p>
-                 気温：<img width="40" height="20" class="bg-danger">　
-                 湿度：<img width="40" height="20" class="bg-info">
-             </p>
-         </div>
-         <div id="myChart" class="epoch" style="width: 100%; height: 200px">
-         </div>
-     </div>
-     <div class="row mt-3">
-         <div class="col-12">
-             <form>
-                 <div class="form-group">
-                     <label for="temperature">気温（－１５℃～３５℃）</label>
-                     <input id="temperature" type="range" class="form-control-range" min="-15" max="35" value="20">
-                 </div>
-                 <div class="form-group">
-                     <label for="humidity">湿度（０％～１００％）</label>
-                     <input id="humidity" type="range" class="form-control-range" min="0" max="100">
-                 </div>
-             </form>
-         </div>
-     </div>
- </div>
- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-         crossorigin="anonymous"></script>
- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-         crossorigin="anonymous"></script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.js"></script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/locale/ja.js"></script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.3.13/d3.js" charset="utf-8"></script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/epoch/0.8.4/js/epoch.min.js"></script>
- 
- </body>
 
-<script>
+    const ctx = document.getElementById("myChart").getContext("2d");
 
-let port;
+    let chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        datasets: [
+          {
+            label: 'X',
+            borderColor: 'rgb(200, 50, 50)',
+            backgroundColor: 'rgba(200, 50, 50, 0.2)',
+            data: [],
+          },
 
-
-
-   // データ範囲 左右別
-   var leftRange = [-20, 40];
-    var rightRange = [-5, 105];
-    // 初期データ
-    var data = [
+        ],
+      },
+      options: {
+        scales: {
+          xAxes: [
             {
-                label: "layer1",
-                range: leftRange,
-                values: [],
+              type: "realtime",
+              realtime: {
+                delay: 500,
+              },
             },
-            {
-                label: "layer2",
-                range: rightRange,
-                values: [],
-            }
-        ]
-    ;
-    // 初期化
-    let chart = $('#myChart').epoch({
-        type: 'time.line',                         //グラフの種類
-        data: data,                                  //初期値
-        axes: ['bottom', 'left', 'right'],       //利用軸の選択
-        fps: 24,                                     //フレームレート
-        range: {                                     //軸の範囲
-            left: leftRange,
-            right: rightRange
+          ],
         },
-        queueSize: 1,   // キューサイズ ※push時、キューからあふれたデータは破棄される
-        windowSize: 20, // 表示から見切れるまでいくつデータを表示させるか
-
-        // 目盛りの設定。 timeは間隔秒数、他は目盛りの数
-        ticks: {time: 5, right: 5, left: 5},
-        // 目盛りの書式
-        tickFormats: {
-            bottom: function (d) {
-                return moment(d * 1000).format('HH:mm:ss');
-            },
-            left: function (d) {
-                return (d).toFixed(1) + " ℃";
-            },
-            right: function (d) {
-                return (d).toFixed(0) + " %";
-            }
-
-        }
+      },
     });
 
-    async function onConnectButtonClick() {
-    try {
-      port = await navigator.serial.requestPort();
-      await port.open({ baudRate: 115200 });
+    async function onStartButtonClick() {
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
 
-      while (port.readable) {
-        const reader = port.readable.getReader();
+        while (port.readable) {
+          const textDecoder = new TextDecoderStream();
+          const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+          const reader = textDecoder.readable
+            .pipeThrough(new TransformStream(new LineBreakTransformer()))
+            .getReader();
 
-        try {
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) {
-              addSerial("Canceled\n");
-              break;
+          try {
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) {
+                console.log("Canceled");
+                break;
+              }
+              console.log(value);
+
+
+              chart.data.datasets[0].data.push({
+                x: Date.now(),
+                y: value,
+              })
+
+              chart.update({
+                preservation: true,
+              });
             }
-            const inputValue = new TextDecoder().decode(value);
-            addSerial(inputValue);
+          } catch (error) {
+            console.log("Error: Read");
+            console.log(error);
+          } finally {
+            reader.releaseLock();
           }
-        } catch (error) {
-          addSerial("Error: Read" + error + "\n");
-        } finally {
-          reader.releaseLock();
         }
+      } catch (error) {
+        console.log("Error: Open");
+        console.log(error);
       }
-    } catch (error) {
-      addSerial("Error: Open" + error + "\n");
     }
-  }
-
-    // リアルタイム表示処理
-    setInterval(function () {
-        chart.push(
-            [
-                {time: Date.now() / 1000, y: $("#temperature")[0].value,},
-                {time: Date.now() / 1000, y: $("#humidity")[0].value,},
-            ],
-        );
-    }, 1000);
-
-</script>  
+  </script>
+</body>
 
 </html>
