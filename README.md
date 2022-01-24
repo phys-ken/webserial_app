@@ -33,3 +33,4 @@
 )
 * [Phys-kenのTopにもどる](https://phys-ken.github.io/phys-ken/)
 * [@Phys-ken(Twitter)](https://twitter.com/phys_ken)
+* [2022授業資料案](https://phys-ken.github.io/webserial_app/2022_jugyos/error.html)
